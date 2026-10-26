@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSU Faculty Research Intelligence & Accreditation System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --bg-dark: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .glass-panel {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+    }
+
+    /* Sidebar */
+    aside {
+      width: 270px;
+      border-right: 1px solid var(--card-border);
+      background-color: #0c111d;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      text-align: left;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      width: 100%;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border-left: 3px solid #3b82f6;
+    }
+
+    .badge-amber {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background-color: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      font-weight: 700;
+    }
+
+    /* Main Area */
+    main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      background-color: #1f2937;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      padding: 20px;
+    }
+
+    .kpi-card h3 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin: 8px 0 4px 0;
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 14px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cat-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .cat-journal { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .cat-conf { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+    .cat-book { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+    .cat-patent { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .cat-project { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .cat-consult { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      font-size: 12px;
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    /* Modal Profile Drawer */
+    .profile-drawer {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 550px;
+      height: 100vh;
+      background: #0f172a;
+      border-left: 1px solid var(--card-border);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
+      padding: 32px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    /* Import Wizard Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="brand">
+      <div class="brand-icon">🎓</div>
+      <div>
+        <h2 style="font-size: 16px; font-weight: 800; color: #fff;">DSU Research</h2>
+        <span style="font-size: 11px; color: var(--text-muted);">Intelligence & NIRF/NAAC</span>
+      </div>
+    </div>
+
+    <!-- Active RBAC Simulator -->
+    <div style="padding: 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); border: 1px solid var(--card-border);">
+      <div style="font-size: 11px; font-weight: 700; color: #93c5fd; margin-bottom: 6px;">🛡️ Active RBAC Persona</div>
+      <select id="role-select" onchange="updateRoleSimulation(this.value)" style="width: 100%; padding: 6px; border-radius: 6px; background: #0f172a; border: 1px solid #334155; color: #fff; font-size: 11px; font-weight: 600;">
+        <option value="SUPER_ADMIN">Super Administrator</option>
+        <option value="RESEARCH_ADMIN">Research Admin (Dean/IQAC)</option>
+        <option value="DEPT_ADMIN">Dept Admin (HOD - CSE)</option>
+        <option value="FACULTY">Faculty Member</option>
+      </select>
+    </div>
+
+    <nav style="display: flex; flex-direction: column; gap: 4px;">
+      <button class="nav-btn active" onclick="switchTab('overview')">
+        <span>📊 Dashboard & Metrics</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('faculty')">
+        <span>👨‍🏫 Faculty Directory</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('research')">
+        <span>📚 Research Categories (7)</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('import')">
+        <span>📥 Import & Ingestion Hub</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('verification')">
+        <span>✅ Verification Queue</span>
+        <span class="badge-amber">3 Pending</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('accreditation')">
+        <span>🏆 NAAC / NBA Reports</span>
+      </button>
+    </nav>
+
+    <div style="margin-top: auto; padding: 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); font-size: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="color: #10b981; font-weight: 700;">● ORCID / Scopus Sync Active</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 11px; line-height: 1.4;">
+        Continuous API polling. Rate limits compliant.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <main>
+    <header>
+      <div>
+        <h1 style="font-size: 24px; font-weight: 800; color: #fff;">Dayananda Sagar University</h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+          Master Faculty Research Intelligence & Accreditation Engine (Enter Once → Verify Once → Reuse Many Times)
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="role-badge" id="current-role-badge">
+          <span>Active Role: SUPER_ADMIN</span>
+        </div>
+        <button id="import-btn" class="btn-secondary" onclick="openImportWizard()">
+          📄 Import CSV/Excel
+        </button>
+        <button class="btn-primary" onclick="triggerUniversalSync()">
+          ✨ Sync Identifiers
+        </button>
+      </div>
+    </header>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div id="tab-overview" class="tab-content active">
+      <div class="kpi-grid">
+        <div class="glass-panel kpi-card">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Active Faculty</span>
+          <h3>142</h3>
+          <span style="font-size: 11px; color: #3b82f6; font-weight: 600;">92% ORCID Linked</span>
+        </div>
+        <div class="glass-panel kpi-card">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Verified Publications</span>
+          <h3>624</h3>
+          <span style="font-size: 11px; color: #10b981; font-weight: 600;">+18 in 2026</span>
+        </div>
+        <div class="glass-panel kpi-card">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Granted Patents</span>
+          <h3>38</h3>
+          <span style="font-size: 11px; color: #8b5cf6; font-weight: 600;">12 Pending Review</span>
+        </div>
+        <div class="glass-panel kpi-card">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Sponsored Funding</span>
+          <h3>₹4.82 Cr</h3>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Across 19 Grants</span>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <!-- Verification Items -->
+        <div class="glass-panel" style="padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700;">Verification Queue (Pending Approval)</h3>
+            <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">3 Records Staged</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="padding: 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: #60a5fa; font-weight: 700;">Elsevier Scopus API Ingest</span>
+                <span style="font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px;">95% Confidence Match</span>
+              </div>
+              <h4 style="font-size: 13px; font-weight: 600; color: #fff;">Quantum Key Distribution Networks: Routing Optimization Protocols</h4>
+              <p style="font-size: 11px; color: var(--text-muted); margin: 4px 0 10px 0;">Assigned to: Dr. Vikram Malhotra (AIML) • DOI: 10.1016/j.quant.2026.04.012</p>
+              
+              <div class="verif-actions-container" style="display: flex; gap: 8px;">
+                <button class="verif-btn" onclick="this.innerText = 'Approved & Committed'; this.style.background = '#059669';" style="padding: 6px 12px; border-radius: 6px; background: #10b981; color: #fff; border: none; font-size: 11px; font-weight: 700; cursor: pointer;">
+                  Verify & Commit
+                </button>
+                <button class="verif-btn" onclick="alert('Record flagged for coordinator clarification');" style="padding: 6px 12px; border-radius: 6px; background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); font-size: 11px; font-weight: 700; cursor: pointer;">
+                  Flag / Dismiss
+                </button>
+                <span class="faculty-lock-notice" style="display: none; font-size: 11px; color: #94a3b8;">🔒 Coordinator approval required to commit</span>
+              </div>
+            </div>
+
+            <div style="padding: 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: #06b6d4; font-weight: 700;">ORCID Works Sync</span>
+                <span style="font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px;">100% ORCID iD Match</span>
+              </div>
+              <h4 style="font-size: 13px; font-weight: 600; color: #fff;">Explainable AI for Early Detection of Diabetic Retinopathy</h4>
+              <p style="font-size: 11px; color: var(--text-muted); margin: 4px 0 10px 0;">Assigned to: Dr. Ramesh Sharma (CSE) • DOI: 10.1109/JBHI.2026.349120</p>
+              
+              <div class="verif-actions-container" style="display: flex; gap: 8px;">
+                <button class="verif-btn" onclick="this.innerText = 'Approved & Committed'; this.style.background = '#059669';" style="padding: 6px 12px; border-radius: 6px; background: #10b981; color: #fff; border: none; font-size: 11px; font-weight: 700; cursor: pointer;">
+                  Verify & Commit
+                </button>
+                <button class="verif-btn" onclick="alert('Record flagged for coordinator clarification');" style="padding: 6px 12px; border-radius: 6px; background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); font-size: 11px; font-weight: 700; cursor: pointer;">
+                  Flag / Dismiss
+                </button>
+                <span class="faculty-lock-notice" style="display: none; font-size: 11px; color: #94a3b8;">🔒 Coordinator approval required to commit</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accreditation Readiness -->
+        <div class="glass-panel" style="padding: 24px;">
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Accreditation Data Readiness</h3>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                <span style="font-weight: 600; color: #fff;">NAAC Criterion 3 (Research & Innovations)</span>
+                <span style="color: #10b981; font-weight: 700;">94%</span>
+              </div>
+              <div style="height: 6px; border-radius: 4px; background: #1e293b; overflow: hidden;">
+                <div style="width: 94%; height: 100%; background: #10b981;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                <span style="font-weight: 600; color: #fff;">NBA Criterion 5 (Faculty Research Contribution)</span>
+                <span style="color: #60a5fa; font-weight: 700;">89%</span>
+              </div>
+              <div style="height: 6px; border-radius: 4px; background: #1e293b; overflow: hidden;">
+                <div style="width: 89%; height: 100%; background: #3b82f6;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px; padding: 12px; border-radius: 8px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); font-size: 11px; color: var(--text-muted);">
+              📌 <strong>Audit Rule:</strong> Missing evidence documents flagged for 3 Scopus papers in ECE before SAR PDF generation.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: FACULTY DIRECTORY -->
+    <div id="tab-faculty" class="tab-content">
+      <div class="glass-panel" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div>
+            <h3 style="font-size: 18px; font-weight: 700;">DSU Faculty Master Profiles</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Centralized roster linking institutional IDs to international researcher identifiers.</p>
+          </div>
+          <button class="btn-primary" onclick="alert('Open Add Faculty Member Dialog')" style="font-size: 12px; padding: 7px 14px;">
+            + Add Faculty
+          </button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Faculty Name</th>
+              <th>Designation</th>
+              <th>Dept</th>
+              <th>ORCID iD</th>
+              <th>Scopus Author ID</th>
+              <th>Profile Completeness</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family: monospace; color: #94a3b8;">DSU-CSE-101</td>
+              <td style="font-weight: 700; color: #fff;">Dr. Ramesh Sharma</td>
+              <td>Professor</td>
+              <td>CSE</td>
+              <td style="font-family: monospace; color: #60a5fa;">0000-0002-1825-0097</td>
+              <td style="font-family: monospace; color: #06b6d4;">57194512300</td>
+              <td><span style="color: #10b981; font-weight: 700;">95%</span></td>
+              <td>
+                <button onclick="openFacultyDrawer('fac-1')" style="padding: 5px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; font-size: 11px; font-weight: 600; cursor: pointer;">
+                  View Profile
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family: monospace; color: #94a3b8;">DSU-ECE-204</td>
+              <td style="font-weight: 700; color: #fff;">Dr. Ananya Iyer</td>
+              <td>Assoc. Professor</td>
+              <td>ECE</td>
+              <td style="font-family: monospace; color: #60a5fa;">0000-0001-9876-5432</td>
+              <td style="font-family: monospace; color: #06b6d4;">57211244500</td>
+              <td><span style="color: #10b981; font-weight: 700;">90%</span></td>
+              <td>
+                <button onclick="openFacultyDrawer('fac-2')" style="padding: 5px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; font-size: 11px; font-weight: 600; cursor: pointer;">
+                  View Profile
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family: monospace; color: #94a3b8;">DSU-AIML-305</td>
+              <td style="font-weight: 700; color: #fff;">Dr. Vikram Malhotra</td>
+              <td>Asst. Professor</td>
+              <td>AIML</td>
+              <td style="font-family: monospace; color: #60a5fa;">0000-0003-4567-8901</td>
+              <td style="font-family: monospace; color: #06b6d4;">57234567890</td>
+              <td><span style="color: #38bdf8; font-weight: 700;">85%</span></td>
+              <td>
+                <button onclick="openFacultyDrawer('fac-3')" style="padding: 5px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; font-size: 11px; font-weight: 600; cursor: pointer;">
+                  View Profile
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: RESEARCH CATEGORIES (STAGE 7 CRUD) -->
+    <div id="tab-research" class="tab-content">
+      <div class="glass-panel" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <h3 style="font-size: 18px; font-weight: 700;">Master Research Dataset (All 7 Categories)</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Single source of truth feeding NAAC, NBA, NIRF, and Faculty Appraisal engines.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <select id="cat-filter" onchange="filterResearchTable(this.value)" style="padding: 6px 12px; border-radius: 6px; background: #1e293b; border: 1px solid var(--card-border); color: #fff; font-size: 12px;">
+              <option value="ALL">All Categories</option>
+              <option value="JOURNAL">1. Journals</option>
+              <option value="CONFERENCE">2. Conferences</option>
+              <option value="BOOK">3. Books / Chapters</option>
+              <option value="PATENT">4. Patents & IPR</option>
+              <option value="PROJECT">5. Sponsored Projects</option>
+              <option value="CONSULTANCY">6. Consultancy</option>
+              <option value="ACTIVITY">7. Academic Activities</option>
+            </select>
+
+            <button class="btn-primary" onclick="alert('Open Add Research Output modal across any category')" style="font-size: 12px; padding: 6px 14px;">
+              + Log Research Output
+            </button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Title / Work Description</th>
+              <th>Lead Faculty</th>
+              <th>Year</th>
+              <th>Key Metadata / Metrics</th>
+              <th>Evidence</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="research-table-body">
+            <tr data-cat="JOURNAL">
+              <td><span class="cat-pill cat-journal">Journal</span></td>
+              <td style="font-weight: 600; color: #fff;">Deep Transfer Learning for Early Fault Diagnosis in Cyber-Physical Systems</td>
+              <td>Dr. Ramesh Sharma</td>
+              <td>2024-25</td>
+              <td>IEEE Trans. Ind. Inform. • <strong style="color: #60a5fa;">Q1</strong> • Citations: 14</td>
+              <td><span style="color: #10b981;">📄 PDF Attached</span></td>
+              <td><span style="color: #10b981; font-weight: 700;">VERIFIED</span></td>
+            </tr>
+            <tr data-cat="CONFERENCE">
+              <td><span class="cat-pill cat-conf">Conference</span></td>
+              <td style="font-weight: 600; color: #fff;">Energy Efficient Resource Allocation in 6G Heterogeneous Cloud-RAN</td>
+              <td>Dr. Ananya Iyer</td>
+              <td>2024-25</td>
+              <td>IEEE ICC 2025 • Scopus Indexed</td>
+              <td><span style="color: #10b981;">📄 PDF Attached</span></td>
+              <td><span style="color: #10b981; font-weight: 700;">VERIFIED</span></td>
+            </tr>
+            <tr data-cat="BOOK">
+              <td><span class="cat-pill cat-book">Book Chapter</span></td>
+              <td style="font-weight: 600; color: #fff;">Edge Intelligence Architectures for Autonomous Electric Vehicles</td>
+              <td>Dr. Ramesh Sharma</td>
+              <td>2023-24</td>
+              <td>Springer Nature • ISBN 978-3-030-99881-2</td>
+              <td><span style="color: #10b981;">📄 PDF Attached</span></td>
+              <td><span style="color: #10b981; font-weight: 700;">VERIFIED</span></td>
+            </tr>
+            <tr data-cat="PATENT">
+              <td><span class="cat-pill cat-patent">Patent</span></td>
+              <td style="font-weight: 600; color: #fff;">An Adaptive Load Balancer System for Multi-Tenant Edge Clouds</td>
+              <td>Dr. Ramesh Sharma</td>
+              <td>2024-25</td>
+              <td>IN-504921 • <strong style="color: #10b981;">GRANTED</strong></td>
+              <td><span style="color: #10b981;">📄 Certificate Attached</span></td>
+              <td><span style="color: #10b981; font-weight: 700;">VERIFIED</span></td>
+            </tr>
+            <tr data-cat="PROJECT">
+              <td><span class="cat-pill cat-project">Project Grant</span></td>
+              <td style="font-weight: 600; color: #fff;">Design & Dev of AI-Driven Threat Mitigation in Cyber Infrastructures</td>
+              <td>Dr. Ramesh Sharma</td>
+              <td>2023-24</td>
+              <td>SERB (Govt) • <strong style="color: #fbbf24;">₹48.50 Lakhs</strong></td>
+              <td><span style="color: #10b981;">📄 Sanction Letter Attached</span></td>
+              <td><span style="color: #10b981; font-weight: 700;">VERIFIED</span></td>
+            </tr>
+            <tr data-cat="CONSULTANCY">
+              <td><span class="cat-pill cat-consult">Consultancy</span></td>
+              <td style="font-weight: 600; color: #fff;">Vision System for Semiconductor QA</td>
+              <td>Dr. Ananya Iyer</td>
+              <td>2024-25</td>
+              <td>Bosch Global • <strong style="color: #fbbf24;">₹12.50 Lakhs</strong></td>
+              <td><span style="color: #10b981;">📄 Client PO Attached</span></td>
+              <td><span style="color: #10b981; font-weight: 700;">VERIFIED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: IMPORT & INGESTION HUB (STAGES 9-11) -->
+    <div id="tab-import" class="tab-content">
+      <div class="glass-panel" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <h3 style="font-size: 18px; font-weight: 700;">Data Ingestion & Integration Hub</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Direct connectors for ORCID v3.0, Elsevier Scopus API, and bulk CSV legacy migration.
+            </p>
+          </div>
+          <button class="btn-primary" onclick="openImportWizard()">
+            + Upload CSV/Excel
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+          <!-- ORCID Card -->
+          <div style="padding: 20px; border-radius: 10px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="color: #60a5fa; font-size: 15px; font-weight: 700;">ORCID Public API v3.0</h4>
+              <span style="padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 11px; font-weight: 700;">CONNECTED</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+              Pulls validated researcher works directly from ORCID iD registry using authenticated read-public tokens.
+            </p>
+            <button onclick="triggerSync('ORCID')" class="btn-secondary" style="font-size: 12px; width: 100%; justify-content: center;">
+              🔄 Sync All Faculty ORCIDs
+            </button>
+          </div>
+
+          <!-- Scopus Card -->
+          <div style="padding: 20px; border-radius: 10px; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="color: #06b6d4; font-size: 15px; font-weight: 700;">Elsevier Scopus API</h4>
+              <span style="padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 11px; font-weight: 700;">ENTITLED</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+              Queries indexed publication metadata, quartile ratings (Q1-Q4), and citation counts via DSU API key.
+            </p>
+            <button onclick="triggerSync('SCOPUS')" class="btn-secondary" style="font-size: 12px; width: 100%; justify-content: center;">
+              🔄 Sync Scopus Author Registry
+            </button>
+          </div>
+        </div>
+
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #fff;">Recent Ingestion Batches</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Batch ID</th>
+              <th>Source</th>
+              <th>Total Rows</th>
+              <th>Ready</th>
+              <th>Duplicates Skipped</th>
+              <th>Errors</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family: monospace; color: #94a3b8;">batch-17189201</td>
+              <td><span style="color: #60a5fa; font-weight: 600;">ORCID API</span></td>
+              <td>12</td>
+              <td><strong style="color: #10b981;">10</strong></td>
+              <td><strong style="color: #f59e0b;">2</strong></td>
+              <td>0</td>
+              <td><span style="color: #10b981; font-weight: 700;">PROCESSED</span></td>
+            </tr>
+            <tr>
+              <td style="font-family: monospace; color: #94a3b8;">batch-17188944</td>
+              <td><span style="color: #06b6d4; font-weight: 600;">Scopus API</span></td>
+              <td>8</td>
+              <td><strong style="color: #10b981;">7</strong></td>
+              <td><strong style="color: #f59e0b;">1</strong></td>
+              <td>0</td>
+              <td><span style="color: #10b981; font-weight: 700;">PROCESSED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: ACCREDITATION -->
+    <div id="tab-accreditation" class="tab-content">
+      <div class="glass-panel" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <h3 style="font-size: 18px; font-weight: 700;">Accreditation Engine: NAAC & NBA Separate Mapping</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Adheres to Rule 11 & 12: NAAC (Institution-level) and NBA (Program-level SAR) use completely independent versioned criteria tables mapped from the same Master DB.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button onclick="setAccredFramework('NAAC')" id="naac-tab-toggle" style="padding: 6px 16px; border-radius: 6px; border: none; background: #3b82f6; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;">
+              NAAC (University)
+            </button>
+            <button onclick="setAccredFramework('NBA')" id="nba-tab-toggle" style="padding: 6px 16px; border-radius: 6px; border: none; background: #1f2937; color: #94a3b8; font-weight: 700; font-size: 12px; cursor: pointer;">
+              NBA (Program SAR)
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <!-- NAAC Box -->
+          <div id="naac-panel" style="padding: 16px; border-radius: 8px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
+            <div style="display: flex; justify-content: space-between;">
+              <h4 style="color: #60a5fa; margin-bottom: 6px;">NAAC (University Manual 2024)</h4>
+              <span style="font-size: 12px; color: #10b981; font-weight: 700;">54 Papers Eligible</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Criterion 3.4.3: Research Papers in UGC CARE / Scopus Indexed Journals per Teacher.</p>
+            <button id="naac-pdf-btn" onclick="alert('Exporting NAAC Statutory Data Template Format PDF with digital watermark...')" class="btn-primary" style="font-size: 11px;">
+              📥 Generate NAAC Data Table PDF
+            </button>
+            <span id="naac-lock-msg" style="display: none; font-size: 11px; color: #94a3b8;">🔒 Restricted: Super Admin & Dean Research only</span>
+          </div>
+
+          <!-- NBA Box -->
+          <div id="nba-panel" style="display: none; padding: 16px; border-radius: 8px; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2);">
+            <div style="display: flex; justify-content: space-between;">
+              <h4 style="color: #06b6d4; margin-bottom: 6px;">NBA (Tier-I UG Engineering 2023)</h4>
+              <span style="font-size: 12px; color: #10b981; font-weight: 700;">30/30 Projected Marks</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Criterion 5.3: Faculty Intellectual Property, Tier-1 Journals & Conference Publications.</p>
+            <button id="nba-pdf-btn" onclick="alert('Exporting NBA SAR Criterion 5 PDF with supporting document references...')" class="btn-primary" style="font-size: 11px; background: linear-gradient(135deg, #0891b2, #0284c7);">
+              📥 Generate NBA SAR Section PDF
+            </button>
+            <span id="nba-lock-msg" style="display: none; font-size: 11px; color: #94a3b8;">🔒 Restricted: HOD & Research Admin only</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Slide-out Faculty Research Profile Drawer (Stage 8) -->
+  <div id="faculty-profile-drawer" class="profile-drawer">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px;">
+      <h2 style="font-size: 18px; font-weight: 800; color: #fff;">Faculty Research Profile</h2>
+      <button onclick="closeFacultyDrawer()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+    </div>
+
+    <div id="drawer-content">
+      <!-- Populated dynamically via JS -->
+    </div>
+  </div>
+
+  <!-- CSV Import Wizard Modal (Stage 9) -->
+  <div id="import-wizard-modal" class="modal-backdrop">
+    <div class="glass-panel" style="width: 600px; padding: 28px; background: #0f172a; border: 1px solid #334155;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff;">Bulk CSV / Excel Data Ingestion</h3>
+        <button onclick="closeImportWizard()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="padding: 24px; border: 2px dashed #3b82f6; border-radius: 10px; text-align: center; background: rgba(59, 130, 246, 0.05); margin-bottom: 20px;">
+        <div style="font-size: 32px; margin-bottom: 8px;">📂</div>
+        <p style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">Drag & Drop your research spreadsheet</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Supports CSV, XLSX with headers: Title, Category, Authors, DOI, Year</p>
+        <button class="btn-primary" onclick="simulateFileUpload()" style="margin: 0 auto; font-size: 12px;">
+          Select File to Preview & Deduplicate
+        </button>
+      </div>
+
+      <div id="import-preview-results" style="display: none; padding: 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="font-size: 13px; font-weight: 700; color: #34d399; margin-bottom: 6px;">Batch Staged Successfully: batch-20261022</h4>
+        <p style="font-size: 12px; color: #e2e8f0; line-height: 1.4;">
+          • Total Rows: 5<br>
+          • Valid & Ready to Commit: 4<br>
+          • Duplicate Flagged (DOI Exists in Master): 1
+        </p>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-secondary" onclick="closeImportWizard()" style="font-size: 12px;">Cancel</button>
+        <button id="commit-import-btn" class="btn-primary" disabled onclick="commitImportBatch()" style="font-size: 12px; opacity: 0.5;">
+          Commit 4 Rows to Staging Queue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      if (tabId === 'verification') {
+        tabId = 'overview';
+      }
+
+      const activeEl = document.getElementById('tab-' + tabId);
+      if (activeEl) activeEl.classList.add('active');
+
+      const btn = event.currentTarget;
+      if (btn) btn.classList.add('active');
+    }
+
+    function setAccredFramework(fw) {
+      const naacPanel = document.getElementById('naac-panel');
+      const nbaPanel = document.getElementById('nba-panel');
+      const naacToggle = document.getElementById('naac-tab-toggle');
+      const nbaToggle = document.getElementById('nba-tab-toggle');
+
+      if (fw === 'NAAC') {
+        naacPanel.style.display = 'block';
+        nbaPanel.style.display = 'none';
+        naacToggle.style.background = '#3b82f6';
+        naacToggle.style.color = '#fff';
+        nbaToggle.style.background = '#1f2937';
+        nbaToggle.style.color = '#94a3b8';
+      } else {
+        naacPanel.style.display = 'none';
+        nbaPanel.style.display = 'block';
+        nbaToggle.style.background = '#0891b2';
+        nbaToggle.style.color = '#fff';
+        naacToggle.style.background = '#1f2937';
+        naacToggle.style.color = '#94a3b8';
+      }
+    }
+
+    function filterResearchTable(cat) {
+      const rows = document.querySelectorAll('#research-table-body tr');
+      rows.forEach(r => {
+        if (cat === 'ALL' || r.getAttribute('data-cat') === cat) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+
+    function openFacultyDrawer(facId) {
+      const drawer = document.getElementById('faculty-profile-drawer');
+      const content = document.getElementById('drawer-content');
+
+      if (facId === 'fac-1') {
+        content.innerHTML = `
+          <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px;">
+            <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #06b6d4); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">
+              RS
+            </div>
+            <div>
+              <h3 style="font-size: 18px; font-weight: 800; color: #fff;">Dr. Ramesh Sharma</h3>
+              <p style="font-size: 12px; color: #94a3b8;">Professor • Computer Science & Engineering (DSU-CSE-101)</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <div style="padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--card-border);">
+              <span style="font-size: 10px; color: var(--text-muted);">ORCID iD</span>
+              <p style="font-family: monospace; color: #60a5fa; font-size: 12px; font-weight: 700;">0000-0002-1825-0097</p>
+            </div>
+            <div style="padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--card-border);">
+              <span style="font-size: 10px; color: var(--text-muted);">Scopus Author ID</span>
+              <p style="font-family: monospace; color: #06b6d4; font-size: 12px; font-weight: 700;">57194512300</p>
+            </div>
+          </div>
+
+          <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #fff;">Verified Research Portfolio Summary</h4>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px;">
+            <div style="padding: 12px; background: #1e293b; border-radius: 8px; text-align: center;">
+              <span style="font-size: 20px; font-weight: 800; color: #60a5fa;">28</span>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Journals</p>
+            </div>
+            <div style="padding: 12px; background: #1e293b; border-radius: 8px; text-align: center;">
+              <span style="font-size: 20px; font-weight: 800; color: #f59e0b;">3</span>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Patents</p>
+            </div>
+            <div style="padding: 12px; background: #1e293b; border-radius: 8px; text-align: center;">
+              <span style="font-size: 20px; font-weight: 800; color: #10b981;">₹48.5L</span>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Grants</p>
+            </div>
+          </div>
+
+          <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #fff;">Key Publications (Master DB Verified)</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border);">
+              <span style="font-size: 10px; color: #60a5fa; font-weight: 700;">IEEE Trans. Ind. Inform. (2025)</span>
+              <h5 style="font-size: 12px; font-weight: 600; color: #fff; margin-top: 4px;">Deep Transfer Learning for Fault Diagnosis in CPS</h5>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">DOI: 10.1109/tii.2025.1098234 • Citations: 14</p>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border);">
+              <span style="font-size: 10px; color: #a855f7; font-weight: 700;">Springer Nature Chapter (2024)</span>
+              <h5 style="font-size: 12px; font-weight: 600; color: #fff; margin-top: 4px;">Edge Intelligence Architectures for EVs</h5>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">ISBN: 978-3-030-99881-2</p>
+            </div>
+          </div>
+        `;
+      } else {
+        content.innerHTML = `<p style="color: var(--text-muted);">Loading profile records for ${facId}...</p>`;
+      }
+
+      drawer.style.display = 'block';
+    }
+
+    function closeFacultyDrawer() {
+      document.getElementById('faculty-profile-drawer').style.display = 'none';
+    }
+
+    function openImportWizard() {
+      document.getElementById('import-wizard-modal').style.display = 'flex';
+    }
+
+    function closeImportWizard() {
+      document.getElementById('import-wizard-modal').style.display = 'none';
+    }
+
+    function simulateFileUpload() {
+      document.getElementById('import-preview-results').style.display = 'block';
+      const btn = document.getElementById('commit-import-btn');
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+
+    function commitImportBatch() {
+      alert('Batch committed! 4 rows added to Staging Queue. Duplicate row skipped.');
+      closeImportWizard();
+    }
+
+    function triggerSync(source) {
+      alert(`Synchronizing with ${source} API... Fetched works parsed and queued for verification.`);
+    }
+
+    function triggerUniversalSync() {
+      alert('Triggering sync across all registered ORCID iDs and Scopus Author IDs.');
+    }
+
+    function updateRoleSimulation(role) {
+      document.getElementById('current-role-badge').innerText = 'Active Role: ' + role;
+
+      const importBtn = document.getElementById('import-btn');
+      if (role === 'SUPER_ADMIN' || role === 'RESEARCH_ADMIN') {
+        importBtn.style.display = 'flex';
+      } else {
+        importBtn.style.display = 'none';
+      }
+
+      const verifBtns = document.querySelectorAll('.verif-btn');
+      const lockNotices = document.querySelectorAll('.faculty-lock-notice');
+      if (role === 'FACULTY') {
+        verifBtns.forEach(b => b.style.display = 'none');
+        lockNotices.forEach(n => n.style.display = 'inline');
+      } else {
+        verifBtns.forEach(b => b.style.display = 'inline-block');
+        lockNotices.forEach(n => n.style.display = 'none');
+      }
+
+      const naacBtn = document.getElementById('naac-pdf-btn');
+      const naacLock = document.getElementById('naac-lock-msg');
+      if (role === 'SUPER_ADMIN' || role === 'RESEARCH_ADMIN') {
+        naacBtn.style.display = 'inline-block';
+        naacLock.style.display = 'none';
+      } else {
+        naacBtn.style.display = 'none';
+        naacLock.style.display = 'inline';
+      }
+
+      const nbaBtn = document.getElementById('nba-pdf-btn');
+      const nbaLock = document.getElementById('nba-lock-msg');
+      if (role !== 'FACULTY') {
+        nbaBtn.style.display = 'inline-block';
+        nbaLock.style.display = 'none';
+      } else {
+        nbaBtn.style.display = 'none';
+        nbaLock.style.display = 'inline';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+// Prisma Schema for DSU Faculty Research Intelligence System
+// Master Database Layer - Comprehensive Relational Schema Specification
+// Adheres strictly to Section 4: Database Design specifications
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =========================================================================
+// 1. FACULTY & ORGANIZATION DOMAIN
+// Tables: departments, faculty, users, roles, permissions, research_identifiers
+// =========================================================================
+
+enum UserRoleType {
+  SUPER_ADMIN
+  RESEARCH_ADMIN
+  DEPT_ADMIN
+  FACULTY
+  VIEWER
+}
+
+enum FacultyCadre {
+  PROFESSOR
+  ASSOCIATE_PROFESSOR
+  ASSISTANT_PROFESSOR
+  RESEARCH_PROFESSOR
+  ADJUNCT
+}
+
+enum FacultyStatus {
+  ACTIVE
+  ON_LEAVE
+  RETIRED
+  RELIEVED
+}
+
+enum RecordStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  CORRECTED
+  MERGED
+}
+
+// Table: departments
+model Department {
+  id        String    @id @default(uuid())
+  code      String    @unique // e.g., 'CSE', 'ECE', 'AIML'
+  name      String    // e.g., 'Computer Science & Engineering'
+  school    String    // e.g., 'School of Engineering'
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  faculty   Faculty[]
+  users     User[]
+
+  @@map("departments")
+}
+
+// Table: roles
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique // e.g., 'SUPER_ADMIN', 'DEAN_RESEARCH', 'HOD', 'FACULTY'
+  description String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+// Table: permissions
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique // e.g., 'VERIFY_PUBLICATIONS', 'EXPORT_NAAC', 'EXPORT_NBA'
+  name        String
+  description String?
+  module      String           // e.g., 'RESEARCH', 'ACCREDITATION', 'USERS'
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+// Junction Table: role_permissions
+model RolePermission {
+  roleId       String     @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// Table: users
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  fullName     String      @map("full_name")
+  roleType     UserRoleType @default(FACULTY) @map("role_type")
+  roleId       String?     @map("role_id")
+  role         Role?       @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  isActive     Boolean     @default(true) @map("is_active")
+  departmentId String?     @map("department_id")
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  lastLoginAt  DateTime?   @map("last_login_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  facultyProfile      Faculty?
+  auditLogs           AuditLog[]
+  verificationActions VerificationRecord[]
+
+  @@map("users")
+}
+
+// Table: faculty
+// Exact attributes: faculty_id, employee_id, name, email, department_id, designation, ORCID, Scopus Author ID, status, timestamps
+model Faculty {
+  id                  String               @id @default(uuid()) @map("faculty_id")
+  employeeId          String               @unique @map("employee_id") // Official DSU employee ID
+  name                String
+  email               String               @unique
+  departmentId        String               @map("department_id")
+  department          Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  designation         FacultyCadre
+  orcid               String?              @unique @map("orcid") // e.g., '0000-0002-1825-0097'
+  scopusAuthorId      String?              @unique @map("scopus_author_id") // Elsevier Scopus Author ID
+  status              FacultyStatus        @default(ACTIVE)
+  userId              String?              @unique @map("user_id")
+  user                User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
+  identifiers         ResearchIdentifier[]
+  publicationAuthors  PublicationAuthor[]
+  authoredBooks       Book[]
+  authoredChapters    BookChapter[]
+  patents             Patent[]
+  researchProjects    ResearchProject[]
+  researchActivities  ResearchActivity[]
+  evidenceDocuments   EvidenceDocument[]
+  syncJobs            SyncJob[]
+  stagedRecords       SyncRecord[]
+
+  @@index([employeeId])
+  @@index([departmentId])
+  @@index([orcid])
+  @@index([scopusAuthorId])
+  @@map("faculty")
+}
+
+// Table: research_identifiers
+model ResearchIdentifier {
+  id          String   @id @default(uuid())
+  facultyId   String   @map("faculty_id")
+  faculty     Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  systemName  String   @map("system_name") // 'ORCID', 'SCOPUS', 'WEB_OF_SCIENCE', 'GOOGLE_SCHOLAR', 'VIDWAN'
+  identifier  String   // persistent author identifier value
+  profileUrl  String?  @map("profile_url")
+  isVerified  Boolean  @default(false) @map("is_verified")
+  lastSyncedAt DateTime? @map("last_synced_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([facultyId, systemName])
+  @@index([systemName, identifier])
+  @@map("research_identifiers")
+}
+
+// =========================================================================
+// 2. RESEARCH DOMAIN
+// Tables: publications, publication_authors, journals, conferences, books,
+// book_chapters, patents, research_projects, funding_records, research_activities
+// =========================================================================
+
+enum PublicationType {
+  JOURNAL
+  CONFERENCE
+  BOOK
+  BOOK_CHAPTER
+}
+
+// Table: journals
+model Journal {
+  id               String        @id @default(uuid())
+  title            String
+  publisher        String?
+  issnPrint        String?       @map("issn_print")
+  issnOnline       String?       @map("issn_online")
+  quartile         String?       // 'Q1', 'Q2', 'Q3', 'Q4'
+  isScopusIndexed  Boolean       @default(false) @map("is_scopus_indexed")
+  isWosIndexed     Boolean       @default(false) @map("is_wos_indexed")
+  isUgcCareListed  Boolean       @default(false) @map("is_ugc_care_listed")
+  impactFactor     Decimal?      @map("impact_factor") @db.Decimal(5, 3)
+  websiteUrl       String?       @map("website_url")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  publications     Publication[]
+
+  @@map("journals")
+}
+
+// Table: conferences
+model Conference {
+  id                 String        @id @default(uuid())
+  name               String
+  proceedingsTitle   String?       @map("proceedings_title")
+  organizer          String?
+  venueLocation      String?       @map("venue_location")
+  isbn               String?
+  isScopusIndexed    Boolean       @default(false) @map("is_scopus_indexed")
+  startDate          DateTime?     @map("start_date")
+  endDate            DateTime?     @map("end_date")
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  publications       Publication[]
+
+  @@map("conferences")
+}
+
+// Table: publications
+// Exact attributes: publication_id, title, DOI, publication type, journal, publisher, ISSN/eISSN, volume, issue, pages, date, source, external ID, verification status
+model Publication {
+  id                 String              @id @default(uuid()) @map("publication_id")
+  title              String
+  doi                String?             @unique
+  publicationType    PublicationType     @default(JOURNAL) @map("publication_type")
+  journalId          String?             @map("journal_id")
+  journalRef         Journal?            @relation(fields: [journalId], references: [id], onDelete: SetNull)
+  conferenceId       String?             @map("conference_id")
+  conferenceRef      Conference?         @relation(fields: [conferenceId], references: [id], onDelete: SetNull)
+  journalText        String?             @map("journal") // string fallback
+  publisher          String?
+  issn               String?             @map("issn_or_eissn")
+  volume             String?
+  issue              String?
+  pages              String?
+  publicationDate    DateTime?           @map("date")
+  publicationYear    Int                 @map("publication_year")
+  source             String?             @map("source") // 'ORCID', 'SCOPUS', 'EXCEL_CSV', 'MANUAL'
+  externalId         String?             @map("external_id")
+  verificationStatus RecordStatus        @default(PENDING) @map("verification_status")
+  citationsCount     Int                 @default(0) @map("citations_count")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  authors            PublicationAuthor[]
+  evidenceDocuments  EvidenceDocument[]
+  verificationRecord VerificationRecord[]
+  duplicateOfSync    SyncRecord[]
+
+  @@index([doi])
+  @@index([publicationYear])
+  @@index([verificationStatus])
+  @@index([publicationType])
+  @@map("publications")
+}
+
+// Table: publication_authors
+// Exact attributes: publication_id, faculty/external author ID, author order, affiliation and matching confidence
+model PublicationAuthor {
+  id              String       @id @default(uuid())
+  publicationId   String       @map("publication_id")
+  publication     Publication  @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  facultyId       String?      @map("faculty_or_external_author_id")
+  faculty         Faculty?     @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  authorName      String       @map("author_name")
+  authorOrder     Int          @default(1) @map("author_order")
+  affiliation     String?      @map("affiliation")
+  isCorresponding Boolean      @default(false) @map("is_corresponding")
+  matchConfidence Decimal?     @map("matching_confidence") @db.Decimal(3, 2) // 0.00 to 1.00
+  matchReason     String?      @map("match_reason")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  @@index([publicationId])
+  @@index([facultyId])
+  @@map("publication_authors")
+}
+
+// Table: books
+model Book {
+  id               String        @id @default(uuid())
+  title            String
+  isbn             String        @unique
+  publisher        String
+  publicationYear  Int           @map("publication_year")
+  edition          String?
+  totalVolume      String?       @map("total_volume")
+  facultyId        String        @map("faculty_id")
+  faculty          Faculty       @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  status           RecordStatus  @default(PENDING)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  chapters         BookChapter[]
+  evidence         EvidenceDocument[]
+
+  @@map("books")
+}
+
+// Table: book_chapters
+model BookChapter {
+  id               String        @id @default(uuid())
+  bookId           String?       @map("book_id")
+  book             Book?         @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  bookTitle        String        @map("book_title")
+  chapterTitle     String        @map("chapter_title")
+  chapterNumber    Int?          @map("chapter_number")
+  pageRange        String?       @map("page_range")
+  isbn             String?
+  publisher        String?
+  publicationYear  Int           @map("publication_year")
+  facultyId        String        @map("faculty_id")
+  faculty          Faculty       @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  status           RecordStatus  @default(PENDING)
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  evidence         EvidenceDocument[]
+
+  @@map("book_chapters")
+}
+
+// Table: patents
+model Patent {
+  id                String             @id @default(uuid())
+  title             String
+  applicationNumber String             @unique @map("application_number")
+  patentNumber      String?            @map("patent_number")
+  jurisdiction      String             @default("India")
+  filingDate        DateTime           @map("filing_date")
+  publicationDate   DateTime?          @map("publication_date")
+  grantDate         DateTime?          @map("grant_date")
+  patentStatus      String             @map("patent_status") // 'FILED', 'PUBLISHED', 'GRANTED'
+  facultyId         String             @map("faculty_id")
+  faculty           Faculty            @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  status            RecordStatus       @default(PENDING)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  evidence          EvidenceDocument[]
+  verificationRecord VerificationRecord[]
+
+  @@map("patents")
+}
+
+// Table: research_projects
+model ResearchProject {
+  id                      String               @id @default(uuid())
+  title                   String
+  fundingAgency           String               @map("funding_agency") // DST, SERB, AICTE, DRDO, Industry
+  agencyType              String               @map("agency_type") // GOVERNMENT, NON_GOVERNMENT, INDUSTRY
+  sanctionOrderNo         String?              @map("sanction_order_no")
+  sanctionedAmount        Decimal              @map("sanctioned_amount") @db.Decimal(14, 2)
+  startDate               DateTime             @map("start_date")
+  endDate                 DateTime?            @map("end_date")
+  projectStatus           String               @map("project_status") // ONGOING, COMPLETED
+  principalInvestigatorId String               @map("principal_investigator_id")
+  principalInvestigator   Faculty              @relation(fields: [principalInvestigatorId], references: [id], onDelete: Restrict)
+  status                  RecordStatus         @default(PENDING)
+  createdAt               DateTime             @default(now()) @map("created_at")
+  updatedAt               DateTime             @updatedAt @map("updated_at")
+
+  fundingRecords          FundingRecord[]
+  evidence                EvidenceDocument[]
+  verificationRecord      VerificationRecord[]
+
+  @@map("research_projects")
+}
+
+// Table: funding_records
+model FundingRecord {
+  id               String          @id @default(uuid())
+  projectId        String          @map("project_id")
+  project          ResearchProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  financialYear    String          @map("financial_year") // e.g., '2024-25'
+  installmentNo    Int             @default(1) @map("installment_no")
+  amountReleased   Decimal         @map("amount_released") @db.Decimal(14, 2)
+  releasedDate     DateTime        @map("released_date")
+  utilizationCertNo String?        @map("utilization_cert_no")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  @@map("funding_records")
+}
+
+// Table: research_activities
+model ResearchActivity {
+  id             String               @id @default(uuid())
+  title          String
+  activityType   String               @map("activity_type") // 'CONSULTANCY', 'FDP', 'WORKSHOP', 'CONFERENCE_CHAIR'
+  financialYear  String               @map("financial_year") // e.g., '2024-25'
+  revenueAmount  Decimal?             @map("revenue_amount") @db.Decimal(14, 2)
+  clientOrOrg    String?              @map("client_or_organizer")
+  startDate      DateTime             @map("start_date")
+  endDate        DateTime?            @map("end_date")
+  facultyId      String               @map("faculty_id")
+  faculty        Faculty              @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  status         RecordStatus         @default(PENDING)
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  evidence       EvidenceDocument[]
+  verificationRecord VerificationRecord[]
+
+  @@map("research_activities")
+}
+
+// =========================================================================
+// 3. OPERATIONS DOMAIN
+// Tables: sync_jobs, sync_records, verification_records,
+// evidence_documents, audit_logs
+// =========================================================================
+
+// Table: sync_jobs
+model SyncJob {
+  id                String       @id @default(uuid())
+  source            String       // 'ORCID', 'SCOPUS', 'EXCEL_BULK'
+  facultyId         String?      @map("faculty_id")
+  faculty           Faculty?     @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  status            String       // 'RUNNING', 'SUCCESS', 'FAILED', 'PARTIAL'
+  recordsFound      Int          @default(0) @map("records_found")
+  newRecords        Int          @default(0) @map("new_records")
+  updatedRecords    Int          @default(0) @map("updated_records")
+  duplicatesSkipped Int          @default(0) @map("duplicates_skipped")
+  errorMessage      String?      @map("error_message")
+  startedAt         DateTime     @default(now()) @map("started_at")
+  completedAt       DateTime?    @map("completed_at")
+
+  syncRecords       SyncRecord[]
+
+  @@index([source])
+  @@index([status])
+  @@map("sync_jobs")
+}
+
+// Table: sync_records
+model SyncRecord {
+  id                 String       @id @default(uuid())
+  syncJobId          String?      @map("sync_job_id")
+  syncJob            SyncJob?     @relation(fields: [syncJobId], references: [id], onDelete: Cascade)
+  source             String       // 'ORCID', 'SCOPUS', 'EXCEL_CSV'
+  rawPayload         Json         @map("raw_payload")
+  normalizedDoi      String?      @map("normalized_doi")
+  normalizedTitle    String       @map("normalized_title")
+  publicationYear    Int?         @map("publication_year")
+  detectedFacultyId  String?      @map("detected_faculty_id")
+  detectedFaculty    Faculty?     @relation(fields: [detectedFacultyId], references: [id], onDelete: SetNull)
+  matchConfidence    Decimal?     @map("match_confidence") @db.Decimal(3, 2)
+  duplicateOfId      String?      @map("duplicate_of_id")
+  duplicateOf        Publication? @relation(fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  processingStatus   String       @default("STAGED") @map("processing_status") // 'STAGED', 'PROMOTED', 'DISMISSED'
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  @@index([normalizedDoi])
+  @@index([processingStatus])
+  @@map("sync_records")
+}
+
+// Table: verification_records
+model VerificationRecord {
+  id                 String            @id @default(uuid())
+  recordType         String            @map("record_type") // 'PUBLICATION', 'PATENT', 'PROJECT', 'ACTIVITY'
+  status             RecordStatus
+  remarks            String?
+  verifiedByUserId   String            @map("verified_by_user_id")
+  verifiedBy         User              @relation(fields: [verifiedByUserId], references: [id])
+  publicationId      String?           @map("publication_id")
+  publication        Publication?      @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  patentId           String?           @map("patent_id")
+  patent             Patent?           @relation(fields: [patentId], references: [id], onDelete: Cascade)
+  projectId          String?           @map("project_id")
+  project            ResearchProject?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activityId         String?           @map("activity_id")
+  activity           ResearchActivity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  createdAt          DateTime          @default(now()) @map("created_at")
+
+  @@index([publicationId])
+  @@index([verifiedByUserId])
+  @@map("verification_records")
+}
+
+// Table: evidence_documents
+model EvidenceDocument {
+  id                  String            @id @default(uuid())
+  fileName            String            @map("file_name")
+  filePath            String            @map("file_path")
+  mimeType            String            @map("mime_type")
+  fileSizeBytes       Int               @map("file_size_bytes")
+  uploadedByFacultyId String?           @map("uploaded_by_faculty_id")
+  faculty             Faculty?          @relation(fields: [uploadedByFacultyId], references: [id], onDelete: SetNull)
+  publicationId       String?           @map("publication_id")
+  publication         Publication?      @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  patentId            String?           @map("patent_id")
+  patent              Patent?           @relation(fields: [patentId], references: [id], onDelete: Cascade)
+  projectId           String?           @map("project_id")
+  project             ResearchProject?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bookId              String?           @map("book_id")
+  book                Book?             @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapterId           String?           @map("chapter_id")
+  chapter             BookChapter?      @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  activityId          String?           @map("activity_id")
+  activity            ResearchActivity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now()) @map("created_at")
+
+  @@index([publicationId])
+  @@index([patentId])
+  @@index([projectId])
+  @@map("evidence_documents")
+}
+
+// Table: audit_logs
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // 'LOGIN', 'CREATE', 'VERIFY', 'REJECT', 'EXPORT'
+  entity    String   // 'Publication', 'Faculty', 'Report', 'Evidence'
+  entityId  String?  @map("entity_id")
+  details   Json?    // Detailed diff or snapshot
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// =========================================================================
+// 4. ACCREDITATION DOMAIN
+// Tables: frameworks, framework_versions, criteria, subcriteria/metrics,
+// criteria_mappings, evidence_requirements, report_templates, generated_reports
+// =========================================================================
+
+enum FrameworkType {
+  NAAC
+  NBA
+  NIRF
+}
+
+// Table: frameworks
+model Framework {
+  id          String             @id @default(uuid())
+  type        FrameworkType      @unique
+  name        String             // e.g., 'National Assessment and Accreditation Council'
+  description String?
+  isActive    Boolean            @default(true) @map("is_active")
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  versions    FrameworkVersion[]
+
+  @@map("frameworks")
+}
+
+// Table: framework_versions
+model FrameworkVersion {
+  id                   String                 @id @default(uuid())
+  frameworkId          String                 @map("framework_id")
+  framework            Framework              @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  versionCode          String                 @map("version_code") // 'NAAC_UNIV_2024', 'NBA_TIER1_UG_2023'
+  title                String                 // 'NAAC University Manual 2024'
+  applicableFrom       DateTime               @map("applicable_from")
+  applicableTo         DateTime?              @map("applicable_to")
+  isCurrent            Boolean                @default(true) @map("is_current")
+  createdAt            DateTime               @default(now()) @map("created_at")
+
+  criteria             Criterion[]
+  reportTemplates      ReportTemplate[]
+  generatedReports     GeneratedReport[]
+
+  @@unique([frameworkId, versionCode])
+  @@map("framework_versions")
+}
+
+// Table: criteria
+model Criterion {
+  id                 String             @id @default(uuid())
+  frameworkVersionId String             @map("framework_version_id")
+  frameworkVersion   FrameworkVersion   @relation(fields: [frameworkVersionId], references: [id], onDelete: Cascade)
+  code               String             // 'Criterion 3', 'Criterion 5'
+  title              String             // 'Research, Innovations and Extension'
+  description        String?
+  weightageMarks     Int                @default(0) @map("weightage_marks")
+  displayOrder       Int                @default(1) @map("display_order")
+  createdAt          DateTime           @default(now()) @map("created_at")
+
+  subcriteria        SubcriterionMetric[]
+
+  @@map("criteria")
+}
+
+// Table: subcriteria / metrics
+model SubcriterionMetric {
+  id                   String                 @id @default(uuid())
+  criterionId          String                 @map("criterion_id")
+  criterion            Criterion              @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  metricCode           String                 @map("metric_code") // '3.4.3', '3.4.5', '5.1', '5.3.1'
+  title                String
+  description          String?
+  metricType           String                 @default("QUANTITATIVE") @map("metric_type") // 'QUANTITATIVE', 'QUALITATIVE'
+  targetScore          Decimal?               @map("target_score") @db.Decimal(5, 2)
+  formulaEvaluation    String?                @map("formula_evaluation") // JSON or formula expression
+  assessmentYearsCount Int                    @default(5) @map("assessment_years_count") // 5 for NAAC, 3 for NBA
+  createdAt            DateTime               @default(now()) @map("created_at")
+
+  mappings             CriteriaMapping[]
+  evidenceRequirements EvidenceRequirement[]
+
+  @@index([metricCode])
+  @@map("subcriteria_metrics")
+}
+
+// Table: criteria_mappings
+model CriteriaMapping {
+  id                   String             @id @default(uuid())
+  metricId             String             @map("metric_id")
+  metric               SubcriterionMetric @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  sourceEntity         String             @map("source_entity") // 'Publication', 'Patent', 'ResearchProject'
+  sourceField          String             @map("source_field")  // 'doi', 'isScopusIndexed', 'grantAmount'
+  targetTemplateColumn String             @map("target_template_column") // Official statutory table header
+  isRequired           Boolean            @default(true) @map("is_required")
+  transformationRule   String?            @map("transformation_rule") // 'FORMAT_DOI_URL', 'DIV_LAKH'
+  createdAt            DateTime           @default(now()) @map("created_at")
+
+  @@map("criteria_mappings")
+}
+
+// Table: evidence_requirements
+model EvidenceRequirement {
+  id              String             @id @default(uuid())
+  metricId        String             @map("metric_id")
+  metric          SubcriterionMetric @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  documentType    String             @map("document_type") // 'PAPER_REPRINT', 'SANCTION_ORDER', 'PATENT_GAZETTE'
+  description     String
+  isMandatory     Boolean            @default(true) @map("is_mandatory")
+  validationRegex String?            @map("validation_regex")
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  @@map("evidence_requirements")
+}
+
+// Table: report_templates
+model ReportTemplate {
+  id                 String           @id @default(uuid())
+  frameworkVersionId String           @map("framework_version_id")
+  frameworkVersion   FrameworkVersion @relation(fields: [frameworkVersionId], references: [id], onDelete: Cascade)
+  templateName       String           @map("template_name") // 'NAAC_SSR_CRITERION3_EXCEL', 'NBA_SAR_CRITERION5_PDF'
+  outputFormat       String           @map("output_format") // 'EXCEL', 'PDF', 'CSV'
+  structureSchema    Json             @map("structure_schema") // Layout and styling JSON schema
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  @@map("report_templates")
+}
+
+// Table: generated_reports
+model GeneratedReport {
+  id                 String           @id @default(uuid())
+  frameworkVersionId String           @map("framework_version_id")
+  frameworkVersion   FrameworkVersion @relation(fields: [frameworkVersionId], references: [id])
+  scopeType          String           @map("scope_type") // 'INSTITUTION', 'DEPARTMENT', 'PROGRAM'
+  scopeId            String?          @map("scope_id")
+  academicYear       String           @map("academic_year")
+  generatedBy        String           @map("generated_by")
+  reportData         Json             @map("report_data")
+  pdfFilePath        String?          @map("pdf_file_path")
+  integrityHash      String?          @map("integrity_hash") // SHA-256 digital seal
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  @@index([frameworkVersionId])
+  @@index([academicYear])
+  @@map("generated_reports")
+}
